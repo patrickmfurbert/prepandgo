@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrEP Reminder - Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 25px;
+            display: none;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        .status-bar {
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .app-title {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 60px;
+            margin-top: -80px;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .main-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s;
+            margin: 10px 0;
+            min-width: 280px;
+        }
+        
+        .main-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .secondary-button {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 30px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
+            min-width: 280px;
+        }
+        
+        .status-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        
+        .time-text {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 40px;
+        }
+        
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            margin: 0 8px;
+        }
+        
+        .progress-dot.active {
+            background: #667eea;
+        }
+        
+        .progress-dot.completed {
+            background: #48bb78;
+        }
+        
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .nav-button {
+            background: #f7fafc;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #667eea;
+            cursor: pointer;
+        }
+        
+        .datetime-input {
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 18px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .taken-button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 25px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
+            margin: 20px 0;
+            min-width: 280px;
+        }
+        
+        .warning-text {
+            color: #e53e3e;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .last-cycle {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome/Main Screen -->
+    <div class="phone-container">
+        <div class="screen active" id="welcome-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="app-title">PrEP & Go</div>
+                
+                <div class="last-cycle">
+                    Last Consumption: Jan 8, 8:30 PM
+                </div>
+                
+                <button class="main-button" onclick="showScreen('schedule-screen')">
+                    Start On Demand Cycle
+                </button>
+                
+                <button class="main-button" onclick="showScreen('daily-screen')">
+                    Start Daily Cycle
+                </button>
+                
+                <button class="secondary-button" onclick="showScreen('settings-screen')">
+                    Settings
+                </button>
+            </div>
+        </div>
+        
+        <!-- Schedule Screen -->
+        <div class="screen" id="schedule-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="status-text">When do you need PrEP?</div>
+                
+                <input type="datetime-local" class="datetime-input" id="exposure-time">
+                
+                <button class="main-button" onclick="showScreen('scheduled-screen')">
+                    Set Reminders
+                </button>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" onclick="showScreen('welcome-screen')">Back</button>
+            </div>
+        </div>
+        
+        <!-- Scheduled/Active Cycle Screen -->
+        <div class="screen" id="scheduled-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="status-text">Next dose in</div>
+                <div class="time-text">2h 45m</div>
+                <div class="subtitle">Take before exposure</div>
+                
+                <div class="progress-indicator">
+                    <div class="progress-dot active"></div>
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                </div>
+                
+                <button class="taken-button" onclick="showScreen('dose2-screen')">
+                    Mark as Taken
+                </button>
+                
+                <button class="secondary-button" onclick="showScreen('welcome-screen')">
+                    Cancel Cycle
+                </button>
+            </div>
+        </div>
+        
+        <!-- Dose 2 Screen -->
+        <div class="screen" id="dose2-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="status-text">Next dose in</div>
+                <div class="time-text">18h 15m</div>
+                <div class="subtitle">24 hours after first dose</div>
+                
+                <div class="progress-indicator">
+                    <div class="progress-dot completed"></div>
+                    <div class="progress-dot active"></div>
+                    <div class="progress-dot"></div>
+                </div>
+                
+                <button class="taken-button" onclick="showScreen('dose3-screen')">
+                    Mark as Taken
+                </button>
+            </div>
+        </div>
+        
+        <!-- Dose 3 Screen -->
+        <div class="screen" id="dose3-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="status-text">Final dose in</div>
+                <div class="time-text">22h 30m</div>
+                <div class="subtitle">48 hours after first dose</div>
+                
+                <div class="progress-indicator">
+                    <div class="progress-dot completed"></div>
+                    <div class="progress-dot completed"></div>
+                    <div class="progress-dot active"></div>
+                </div>
+                
+                <button class="taken-button" onclick="showScreen('complete-screen')">
+                    Mark as Taken
+                </button>
+            </div>
+        </div>
+        
+        <!-- Cycle Complete Screen -->
+        <div class="screen" id="complete-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="status-text">Cycle Complete! ✅</div>
+                <div class="subtitle">You're all set. Well done!</div>
+                
+                <div class="progress-indicator">
+                    <div class="progress-dot completed"></div>
+                    <div class="progress-dot completed"></div>
+                    <div class="progress-dot completed"></div>
+                </div>
+                
+                <button class="main-button" onclick="showScreen('welcome-screen')">
+                    Done
+                </button>
+            </div>
+        </div>
+        
+        <!-- Settings Screen -->
+        <div class="screen" id="settings-screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>100%</span>
+            </div>
+            <div class="content">
+                <div class="status-text">Settings</div>
+                
+                <div style="text-align: left; width: 100%; max-width: 300px;">
+                    <div style="margin: 20px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Default timing before exposure:</label>
+                        <select style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <option>2 hours</option>
+                            <option>4 hours</option>
+                            <option>6 hours</option>
+                            <option>24 hours</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Notification sound:</label>
+                        <select style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <option>Default</option>
+                            <option>Gentle</option>
+                            <option>Silent</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="main-button" onclick="showScreen('welcome-screen')">
+                    Save
+                </button>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" onclick="showScreen('welcome-screen')">Back</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show target screen
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        // Set default datetime to 2 hours from now
+        const now = new Date();
+        now.setHours(now.getHours() + 2);
+        const dateTimeInput = document.getElementById('exposure-time');
+        if (dateTimeInput) {
+            dateTimeInput.value = now.toISOString().slice(0, 16);
+        }
+    </script>
+</body>
+</html>
