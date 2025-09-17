@@ -16,8 +16,38 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import GradientText from './src/components/GradientText';
+import ConfirmationPopup from './src/components/popups/ConfirmationPopup';
+import { usePopup, PopupType } from './src/hooks/usePopup';
 
 function App(): React.JSX.Element {
+  const { visible, type, showPopup, hidePopup, confirmPopup } = usePopup();
+
+  // Define content for different popup types
+  const getPopupContent = () => {
+    switch (type) {
+      case PopupType.ON_DEMAND:
+        return {
+          title: 'Start On Demand Cycle',
+          message: 'You\'re about to start a new On Demand cycle. This requires taking 2 pills now, followed by 1 pill 24 hours after and 1 pill 48 hours after the first dose.',
+          pillCount: 2,
+        };
+      case PopupType.DAILY:
+        return {
+          title: 'Start Daily Cycle',
+          message: 'You\'re about to start a new Daily cycle. This requires taking 1 pill at the same time every day.',
+          pillCount: 1,
+        };
+      default:
+        return {
+          title: '',
+          message: '',
+          pillCount: 0,
+        };
+    }
+  };
+
+  const popupContent = getPopupContent();
+
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={'dark-content'} />
@@ -44,7 +74,10 @@ function App(): React.JSX.Element {
             end={{ x: 1, y: 0 }}
             style={styles.mainButtonContainer}
           >
-            <TouchableOpacity style={styles.buttonTouchable}>
+            <TouchableOpacity 
+              style={styles.buttonTouchable}
+              onPress={() => showPopup(PopupType.ON_DEMAND)}
+            >
               <Text style={styles.mainButtonText}>Start On Demand Cycle</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -55,7 +88,10 @@ function App(): React.JSX.Element {
             end={{ x: 1, y: 0 }}
             style={styles.mainButtonContainer}
           >
-            <TouchableOpacity style={styles.buttonTouchable}>
+            <TouchableOpacity 
+              style={styles.buttonTouchable}
+              onPress={() => showPopup(PopupType.DAILY)}
+            >
               <Text style={styles.mainButtonText}>Start Daily Cycle</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -64,6 +100,15 @@ function App(): React.JSX.Element {
             <Text style={styles.secondaryButtonText}>Settings</Text>
           </TouchableOpacity>
         </ScrollView>
+
+        <ConfirmationPopup
+          visible={visible}
+          onClose={hidePopup}
+          onConfirm={confirmPopup}
+          title={popupContent.title}
+          message={popupContent.message}
+          pillCount={popupContent.pillCount}
+        />
       </SafeAreaView>
     </SafeAreaProvider>
   );
